@@ -1,0 +1,10 @@
+.DS_Store
+.vscode/*
+.idea
+.env
+**/node_modules/
+**/.serverless/
+**/.vscode/*
+backend/.webpack/
+frontend/dist/
+frontend/.angular/
