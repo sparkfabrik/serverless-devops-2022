@@ -18,6 +18,7 @@ provider:
   environment:
     CORS_VALID_ORIGINS: '*'
     STAGE: ${self:provider.stage}
+    DYNAMODB_PROFILES_TABLE: ${opt:stage}-Profiles
   stackTags:
     Project: "${self:service}"
     Environment: "${opt:stage, 'local'}"
@@ -32,6 +33,14 @@ provider:
       Action:
         - 'cloudwatch:PutMetricData'
       Resource: '*'
+    - Effect: Allow
+      Action:
+        - 'dynamodb:GetItem'
+        - 'dynamodb:Scan'
+        - 'dynamodb:PutItem'
+        - 'dynamodb:UpdateItem'
+        - 'dynamodb:DeleteItem'
+      Resource: !GetAtt ProfilesTable.Arn
 
 functions:
   getSignedUrl:
@@ -59,6 +68,74 @@ functions:
           retryPolicy:
             maximumEventAge: 3600
             maximumRetryAttempts: 1
+  createProfile:
+    description: 'Create profile'
+    handler: src/handlers/apiGateway/createProfile.handler
+    environment:
+      CORS_VALID_METHODS: OPTIONS,POST
+    events:
+      - http:
+          path: profile
+          method: post
+          cors: true
+          request:
+            schemas:
+              application/json: ${file(src/schemas/create.json)}
+
+  updateProfile:
+    description: 'Update profile'
+    handler: src/handlers/apiGateway/updateProfile.handler
+    environment:
+      CORS_VALID_METHODS: OPTIONS,PUT
+    events:
+      - http:
+          path: profile/{id}
+          method: put
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+            schemas:
+              application/json: ${file(src/schemas/update.json)}
+  listProfiles:
+    description: 'List profiles'
+    handler: src/handlers/apiGateway/listProfiles.handler
+    environment:
+      CORS_VALID_METHODS: OPTIONS,GET
+    events:
+      - http:
+          path: profile/list
+          method: get
+          cors: true
+  getProfile:
+    description: 'Get public profile'
+    handler: src/handlers/apiGateway/getProfile.handler
+    environment:
+      CORS_VALID_METHODS: OPTIONS,GET
+    events:
+      - http:
+          path: profile/{id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  deleteProfile:
+    description: 'Delete profile'
+    handler: src/handlers/apiGateway/deleteProfile.handler
+    environment:
+      CORS_VALID_METHODS: OPTIONS,DELETE
+    events:
+      - http:
+          path: profile/{id}
+          method: delete
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
 
 resources:
   Resources:
@@ -86,6 +163,19 @@ resources:
       Properties:
         DashboardName: "profile-${self:provider.stage}-data"
         DashboardBody: ${file(./dashboard/body.js):getDataBody}
+    ProfilesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_PROFILES_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 custom:
   assetsBucket: profile-assets-${aws:accountId}-${opt:stage}
