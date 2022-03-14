@@ -1,0 +1,97 @@
+service: profile-api
+frameworkVersion: '3'
+useDotenv: true
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-plugin-resource-tagging
+provider:
+  name: aws
+  profile: workshops
+  region: eu-west-2
+  runtime: nodejs14.x
+  stage: ${opt:stage}
+  memorySize: 128
+  timeout: 30
+  lambdaHashingVersion: 20201221
+  apiName: ${opt:stage}-profile-api
+  environment:
+    CORS_VALID_ORIGINS: '*'
+    STAGE: ${self:provider.stage}
+  stackTags:
+    Project: "${self:service}"
+    Environment: "${opt:stage, 'local'}"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - 's3:PutObject'
+      Resource:
+        - !GetAtt AssetsBucket.Arn
+        - { Fn::Join: ['', [{ 'Fn::GetAtt': ['AssetsBucket', 'Arn'] }, '/*']] }
+    - Effect: Allow
+      Action:
+        - 'cloudwatch:PutMetricData'
+      Resource: '*'
+
+functions:
+  getSignedUrl:
+    description: 'Get S3 signed url'
+    handler: src/handlers/apiGateway/getSignedUrl.handler
+    environment:
+      CORS_VALID_METHODS: OPTIONS,GET
+      ASSETS_BUCKET: ${self:custom.assetsBucket}
+    events:
+      - http:
+          path: get-signed-url
+          method: get
+          cors: true
+  createProfileEvent:
+    description: 'Listen to create profile event'
+    handler: src/handlers/eventBridge/createProfile.handler
+    environment:
+      EVENT_BUS_NAME: ${self:custom.eventBusName}
+    events:
+      - eventBridge:
+          eventBus: !GetAtt ProfileEventBus.Name
+          pattern:
+            source:
+              - profile.created
+          retryPolicy:
+            maximumEventAge: 3600
+            maximumRetryAttempts: 1
+
+resources:
+  Resources:
+    AssetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.assetsBucket}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+                - HEAD
+                - PUT
+                - POST
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+    ProfileEventBus:
+      Type: AWS::Events::EventBus
+      Properties:
+        Name: ${self:custom.eventBusName}
+    DataDashboard:
+      Type: AWS::CloudWatch::Dashboard
+      Properties:
+        DashboardName: "profile-${self:provider.stage}-data"
+        DashboardBody: ${file(./dashboard/body.js):getDataBody}
+
+custom:
+  assetsBucket: profile-assets-${aws:accountId}-${opt:stage}
+  eventBusName: profile-events-${self:provider.stage}
+  alarmEmail: 'email@email.null'
+  webpack:
+    webpackConfig: './webpack.config.js'
+  serverless-offline:
+    host: 0.0.0.0

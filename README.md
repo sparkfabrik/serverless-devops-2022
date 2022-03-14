@@ -13,8 +13,10 @@
 2) enter your credentials and `eu-west-2` as the default region
 3) clone repository
 4) run `make setup-stage`
-5) run `make fe-deploy`
-6) run `make fe-start`
+5) run `make be-deploy`
+6) update Angular prod environment file with ApiGateway endpoint (replace {API_GATEWAY_ENDPOINT})
+7) run `make fe-deploy`
+8) run `make fe-start`
 
 ## Links
 

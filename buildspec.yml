@@ -3,7 +3,9 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - make be-install
       - make fe-install
   build:
     commands:
+      - make be-start
       - make fe-start

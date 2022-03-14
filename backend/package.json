@@ -1,0 +1,32 @@
+{
+  "name": "profile-api",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix",
+    "start": "AWS_PROFILE=workshops sls offline start --stage {STAGE}",
+    "deploy": "sls deploy --verbose --stage {STAGE}",
+    "remove": "sls remove --verbose --stage {STAGE}"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.955.0",
+    "csv-parse": "^4.16.3",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-plugin-prettier": "^4.0.0",
+    "nodemon": "2.0.13",
+    "prettier": "^2.5.1",
+    "serverless": "^3.7.1",
+    "serverless-offline": "^8.5.0",
+    "serverless-plugin-resource-tagging": "^1.2.0",
+    "serverless-webpack": "5.5.4",
+    "webpack": "5.54.0"
+  }
+}
