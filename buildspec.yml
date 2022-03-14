@@ -1,0 +1,9 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - make fe-install
+  build:
+    commands:
+      - make fe-start

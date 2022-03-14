@@ -1,0 +1,19 @@
+<div class="container">
+<mat-card>
+  <mat-card-header>
+    <div mat-card-avatar>
+      <mat-icon>account_circle</mat-icon>
+    </div>
+    <mat-card-title><h1>{{ profile.firstName }} {{ profile.lastName }}</h1></mat-card-title>
+    <mat-card-subtitle>{{ profile.email }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <h4>Bio</h4>
+    <p>{{ profile.bio }}</p>
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-raised-button color="primary" [routerLink]="['/profile', profile.id, 'edit']">Edit</button>
+    <button mat-raised-button color="warn" (click)="delete()" [disabled]="saving === true">Delete</button>
+  </mat-card-actions>
+</mat-card>
+</div>

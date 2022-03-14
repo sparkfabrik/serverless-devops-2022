@@ -1,0 +1,53 @@
+service: profile-app
+frameworkVersion: '3'
+useDotenv: true
+plugins:
+  - serverless-plugin-scripts
+  - serverless-s3-sync
+provider:
+  name: aws
+  profile: workshops
+  region: eu-west-2
+  stage: ${opt:stage}
+
+resources:
+  Resources:
+    ProfileApp:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: PublicRead
+        BucketName: ${self:custom.bucketName}
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+    ProfileAppS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: ProfileApp
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+              - s3:GetObject
+              Resource:
+                Fn::Join: [
+                  "", [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "ProfileApp"
+                    },
+                    "/*"
+                  ]
+                ]
+
+custom:
+  bucketName: profile-app-${aws:accountId}-${opt:stage}
+  scripts:
+    hooks:
+      'package:initialize': npm run build
+  s3Sync:
+    - bucketName: ${self:custom.bucketName}
+      localDir: dist/profile-app

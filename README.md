@@ -12,6 +12,9 @@
 1) launch `aws configure --profile workshops`
 2) enter your credentials and `eu-west-2` as the default region
 3) clone repository
+4) run `make setup-stage`
+5) run `make fe-deploy`
+6) run `make fe-start`
 
 ## Links
 
