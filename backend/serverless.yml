@@ -25,6 +25,7 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - 's3:GetObject'
         - 's3:PutObject'
       Resource:
         - !GetAtt AssetsBucket.Arn
@@ -136,6 +137,16 @@ functions:
             parameters:
               paths:
                 id: true
+  processFile:
+    description: 'Process uploaded file'
+    handler: src/handlers/s3/processFile.handler
+    events:
+      - s3:
+          bucket: !Ref AssetsBucket
+          existing: true
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .csv
 
 resources:
   Resources:
