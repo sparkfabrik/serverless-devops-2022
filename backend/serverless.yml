@@ -191,6 +191,37 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    MonitoringDashboard:
+      Type: AWS::CloudWatch::Dashboard
+      Properties:
+        DashboardName: "profile-${self:provider.stage}-monitoring"
+        DashboardBody: ${file(./dashboard/body.js):getMonitoringBody}
+    ProfileErrorTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ProfileErrorTopic
+    EmailSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: ${self:custom.alarmEmail}
+        Protocol: email
+        TopicArn: !Ref ProfileErrorTopic
+    ProfileErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Checks all 5xx errors on ApiGateway resource
+        Namespace: AWS/ApiGateway
+        MetricName: 5XXError
+        Statistic: Sum
+        Threshold: 0
+        ComparisonOperator: GreaterThanThreshold
+        EvaluationPeriods: 1
+        Period: 300
+        Dimensions:
+          - Name: ApiName
+            Value: ${self:provider.apiName}
+        AlarmActions:
+          - !Ref ProfileErrorTopic
 
 custom:
   assetsBucket: profile-assets-${aws:accountId}-${opt:stage}
