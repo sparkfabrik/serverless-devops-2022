@@ -42,6 +42,10 @@ provider:
         - 'dynamodb:UpdateItem'
         - 'dynamodb:DeleteItem'
       Resource: !GetAtt ProfilesTable.Arn
+    - Effect: Allow
+      Action:
+        - 'events:PutEvents'
+      Resource: !GetAtt ProfileEventBus.Arn
 
 functions:
   getSignedUrl:
